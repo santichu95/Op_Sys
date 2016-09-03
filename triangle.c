@@ -17,7 +17,9 @@ int main( int argc, char* argv[] ) {
     int numProc;
 
     //Check if the files exists
-    if( !( fopen(argv[1], "r")) ) {
+    input = fopen(argv[1], "r");
+
+    if( input == NULL ) {
         perror("FIle not found");
     }
 
@@ -31,8 +33,14 @@ int main( int argc, char* argv[] ) {
             strlen("Number of processes was not in the acceptable bouds\n"));
     }
 
-    
     //Read in the points
+    int numberPoints;
+    fscanf(input, "%d", &numberPoints);
+
+    fprintf(stdout, "%d\n", numberPoints);
+
+    for ( int i = 0; i < numberPoints; i++ ) {
+    }
 
     //Create Pipe
    
