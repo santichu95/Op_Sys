@@ -2,10 +2,12 @@
  * Santiago Andaluz Ruiz 
  * Program 0
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
 
 int  checkPoints(int xOne, int xTwo, int xThree, int yOne, int yTwo, int yThree) {
     int  ans;
@@ -62,11 +64,14 @@ int main( int argc, char* argv[] ) {
         exit(1);
     } 
 
+    FILE* tempIn;
+    FILE* tempOut;
     FILE* input;
     int numProc;
     int x, y;
     int start = 0, end;
     int slice, remainder;
+    pid_t pid;
 
     //Pipe
     int fd[2];
@@ -124,8 +129,6 @@ int main( int argc, char* argv[] ) {
    
     //Fork and thread
     
-    //Parent counts as one of the proc
-    numProc--;
     start = 0 - slice;
     end = 0;
     
@@ -138,24 +141,48 @@ int main( int argc, char* argv[] ) {
             remainder--;
         }
 
-        fork();
+        pid = fork();
     }
 
     //Figure out how to solve the question.
     int counter = 0;
+    int temp;;
 
-    for ( int i = start; i < end; i++ ) {
-        for ( int j = i + 1; j < numberPoints ; j++ ) {
-            for ( int k = j + 1; k < numberPoints; k++) {
-                if ( 1 == checkPoints( points[i][0], points[j][0], points[k][0], 
-                                    points[i][1], points[j][1], points[k][1]) ) {
-                    counter++;
+    if ( pid == 0 ) {
+        close(fd[1]);
+
+        for ( int i = start; i < end; i++ ) {
+            for ( int j = i + 1; j < numberPoints ; j++ ) {
+                for ( int k = j + 1; k < numberPoints; k++) {
+                    if ( 1 == checkPoints( points[i][0], points[j][0], points[k][0], 
+                                        points[i][1], points[j][1], points[k][1]) ) {
+                        counter++;
+                    }
                 }
             }
         }
+
+        tempIn = fdopen(fd[0], "w");
+
+        fprintf(tempIn, "%d", counter );
+
+        fclose(tempIn);
+
+        close(fd[0]);
+    } else {
+        close(fd[0]);
+        tempOut = fdopen(fd[1], "r");
+
+        for ( int i = 0; i < numProc; i ++ ) {
+            fscanf(tempOut, "%d", &temp);
+            counter += temp;
+        }
+
+        fprintf(stdout, "%d\n", counter);
+
+        fclose(tempOut);
+        close(fd[1]);
     }
 
-    fprintf(stdout, "%d\n", counter);
-    
     return 0;
 }
