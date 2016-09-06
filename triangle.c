@@ -5,7 +5,56 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
+int  checkPoints(int xOne, int xTwo, int xThree, int yOne, int yTwo, int yThree) {
+    int  ans;
+
+    int  vertOne = 0, vertTwo = 0;
+
+    int  rise, run; 
+    double  slopeOne, slopeTwo;
+
+    rise = yTwo - yOne;
+    run = xTwo - xOne;
+    
+
+    if( run == 0 ) {
+        vertOne = 1;
+    } else if (rise == 0 ) {
+        slopeOne = 0;
+    } else {
+        slopeOne = rise/run;
+    }
+    
+    rise = yThree - yOne;
+    run = xThree - xOne;
+
+    if( run == 0 ) {
+       vertTwo = 1;
+    } else if ( rise == 0 ) {
+       slopeTwo = 0;
+    }  else {
+       slopeTwo = rise/run;
+    }
+
+    if ( vertOne && slopeTwo == 0 ) {
+        ans = 0;
+    }
+    
+    if ( vertTwo && slopeOne == 0 ) {
+        ans = 0;
+    }
+    
+    slopeTwo *= -1;
+    slopeTwo /= 1;
+
+    if ( abs(slopeOne - slopeTwo) < .0001 ) {
+        ans = 1;
+    }
+
+    return ans;
+}
 int main( int argc, char* argv[] ) {
     //Checking for right number of agruments
     if ( argc != 3 ) {
@@ -16,7 +65,8 @@ int main( int argc, char* argv[] ) {
     FILE* input;
     int numProc;
     int x, y;
-    int start, end;
+    int start = 0, end;
+    int slice, remainder;
 
     //Pipe
     int fd[2];
@@ -65,6 +115,9 @@ int main( int argc, char* argv[] ) {
     }
     */
 
+    slice = numberPoints/numProc;
+    remainder = numberPoints % numProc;
+
     //Create Pipe
     
     pipe(fd);
@@ -73,21 +126,36 @@ int main( int argc, char* argv[] ) {
     
     //Parent counts as one of the proc
     numProc--;
+    start = 0 - slice;
+    end = 0;
     
-    for( int i = 0; i < numProc; i++; ) {
+    for( int i = 0; i < numProc; i++ ) {
+        start = end;
+        end += slice;
 
+        if ( remainder > 0 ) {
+            end++;
+            remainder--;
+        }
+
+        fork();
     }
 
     //Figure out how to solve the question.
+    int counter = 0;
 
-    //Have a selected point
-    //Check if any two other points have negative reciprocal slopes
-    
-    //for each point {
-    //Double for loop
-    //for i = 0 ... numPoints - 1
-    //  for j = 1 + 1 ... numPoints
-    //  }
+    for ( int i = start; i < end; i++ ) {
+        for ( int j = i + 1; j < numberPoints ; j++ ) {
+            for ( int k = j + 1; k < numberPoints; k++) {
+                if ( 1 == checkPoints( points[i][0], points[j][0], points[k][0], 
+                                    points[i][1], points[j][1], points[k][1]) ) {
+                    counter++;
+                }
+            }
+        }
+    }
+
+    fprintf(stdout, "%d\n", counter);
     
     return 0;
 }
