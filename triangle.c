@@ -7,14 +7,19 @@
 #include <string.h>
 
 int main( int argc, char* argv[] ) {
+    //Checking for right number of agruments
     if ( argc != 3 ) {
-        write(1, "Wrong number of arguements\n", 
-                strlen("Wrong number of arguements\n"));
+        fprintf(stderr, "Expected %s <file name> <number of processes>\n", argv[0]);
         exit(1);
     } 
 
     FILE* input;
     int numProc;
+    int x, y;
+    int start, end;
+
+    //Pipe
+    int fd[2];
 
     //Check if the files exists
     input = fopen(argv[1], "r");
@@ -35,16 +40,43 @@ int main( int argc, char* argv[] ) {
 
     //Read in the points
     int numberPoints;
+    
     fscanf(input, "%d", &numberPoints);
 
-    fprintf(stdout, "%d\n", numberPoints);
+    /* fprintf(stdout, "%d\n", numberPoints); */
+
+    //int points[][] = (int *) malloc(sizeof(int) * numberPoints);
+   
+    int points[numberPoints][2];
 
     for ( int i = 0; i < numberPoints; i++ ) {
+        fscanf(input, "%d %d", &x, &y);
+
+        points[i][0] = x;
+        points[i][1] = y;
     }
 
+    /*
+    for ( int i = 0; i < numberPoints; i++ ) {
+        x = points[i][0];
+        y = points[i][1];
+
+        fprintf(stdout, "%d %d\n", x, y);
+    }
+    */
+
     //Create Pipe
+    
+    pipe(fd);
    
     //Fork and thread
+    
+    //Parent counts as one of the proc
+    numProc--;
+    
+    for( int i = 0; i < numProc; i++; ) {
+
+    }
 
     //Figure out how to solve the question.
 
