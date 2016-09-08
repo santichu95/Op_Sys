@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 
-int  checkPoints(int xOne, int xTwo, int xThree, int yOne, int yTwo, int yThree) {
+int checkPoints(int xOne, int xTwo, int xThree, int yOne, int yTwo, int yThree) {
     int  ans;
 
     int  vertOne = 0, vertTwo = 0;
@@ -57,7 +57,10 @@ int  checkPoints(int xOne, int xTwo, int xThree, int yOne, int yTwo, int yThree)
 
     return ans;
 }
+
 int main( int argc, char* argv[] ) {
+
+    printf( "Break");
     //Checking for right number of agruments
     if ( argc != 3 ) {
         fprintf(stderr, "Expected %s <file name> <number of processes>\n", argv[0]);
@@ -133,6 +136,7 @@ int main( int argc, char* argv[] ) {
     end = 0;
     
     for( int i = 0; i < numProc; i++ ) {
+        /*
         start = end;
         end += slice;
 
@@ -142,14 +146,17 @@ int main( int argc, char* argv[] ) {
         }
 
         pid = fork();
+        */
     }
 
     //Figure out how to solve the question.
     int counter = 0;
     int temp;;
 
+/*
     if ( pid == 0 ) {
         close(fd[1]);
+
 
         for ( int i = start; i < end; i++ ) {
             for ( int j = i + 1; j < numberPoints ; j++ ) {
@@ -169,6 +176,7 @@ int main( int argc, char* argv[] ) {
         fclose(tempIn);
 
         close(fd[0]);
+        exit(0);
     } else {
         close(fd[0]);
         tempOut = fdopen(fd[1], "r");
@@ -183,6 +191,7 @@ int main( int argc, char* argv[] ) {
         fclose(tempOut);
         close(fd[1]);
     }
+    */
 
     return 0;
 }
