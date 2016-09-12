@@ -1,0 +1,234 @@
+/**
+ * Santiago Andaluz Ruiz 
+ * Program 0
+ * Pythagorian theorum might be a better option?
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <math.h>
+
+struct Point {
+    int x;
+    int y;
+};
+
+int checkTriangle(struct Point, struct Point, struct Point );
+
+int checkPoints(struct Point, struct Point, struct Point );
+
+int main( int argc, char* argv[] ) {
+
+    //Checking for right number of agruments
+    if ( argc != 3 ) {
+        fprintf(stderr, "Expected %s <file name> <number of processes>\n", argv[0]);
+        exit(1);
+    } 
+
+    FILE* input;
+    int numProc;
+    int x, y;
+
+    //Pipe
+    int fd[2];
+
+    //Check if the files exists
+    input = fopen(argv[1], "r");
+
+    if( input == NULL ) {
+        perror("File not found");
+        fclose(input);
+        exit(-1);
+    }
+
+    //Check if the number of programs is valid
+    //i.e > 0
+    numProc = atoi(argv[2]);
+    
+    if( numProc < 0 || numProc > 101 ) {
+        fprintf( stderr, 
+            "Number of processes was not in the acceptable bounds\n");
+    }
+
+    //Read in the points
+    int numberPoints;
+    
+    fscanf(input, "%d", &numberPoints);
+
+    struct Point points[numberPoints];
+
+    int returnValue;
+
+    for ( int i = 0; i < numberPoints; i++ ) {
+        returnValue = fscanf(input, "%d %d", &x, &y);
+        if ( returnValue == EOF ) {
+            fprintf(stderr, "Data file did not contain enough points\n");
+            fclose(input);
+            exit(-1);
+        }
+        points[i].x = x;
+        points[i].y = y;
+    }
+
+    fclose(input);
+
+    //Create Pipe
+    
+    pipe(fd);
+    pid_t pid;
+   
+    int slice, remainder;
+    slice = numberPoints/numProc;
+    remainder = numberPoints % numProc;
+
+    int start = 0;
+    int end = 0;
+
+    //Fork and thread
+    
+    for( int i = 0; i < numProc; i++ ) {
+        start = end;
+        end += slice;
+        if ( remainder > 0 ) {
+            remainder--;
+            end++;
+        }
+
+        pid = fork();
+
+        if ( pid == 0 ) {
+           break;
+        }
+    }
+
+    int numberRight = 0;
+    int temp, counter = 0;
+
+    if ( pid == 0 ) {
+        close(fd[0]);
+        
+        fprintf(stdout, "%d %d\n", start, end);
+        
+        for ( int i = start; i < end; i++ ) {
+            for ( int j = i + 1; j < numberPoints - 1; j++ ) {
+                for ( int k = j + 1; k < numberPoints; k++ ) {
+                    numberRight += checkTriangle(points[i], points[j], points[k]);
+                }
+            }
+        }
+
+        write(fd[1], &numberRight, sizeof(int) );
+        close(fd[1]);
+        
+        exit(0);
+    } else {
+        close(fd[1]);
+        for ( int i = 0; i < numProc; i++) {
+            read(fd[0], &temp, sizeof(int) );
+            counter += temp;
+        }
+        close(fd[0]);
+
+    }
+
+
+    fprintf(stdout, "%d\n", counter);
+
+    //Figure out how to solve the question.
+    return 0;
+}
+
+/*
+ * Checks if a set of three points creates a right triangle around any of the three
+ * points.
+ */
+int checkTriangle(struct Point first, struct Point second, struct Point third) {
+    int result = 0;
+
+    result = checkPoints(first, second, third);
+
+    if ( result == 0 ) {
+        //fprintf(stdout, "Second\n");
+        result = checkPoints(second, first, third);
+    }
+    if ( result == 0 ) { 
+        //fprintf(stdout, "Third\n");
+        result = checkPoints(third, first, second);
+    }
+
+    //fprintf(stdout, "Result: %d\n", result);
+
+    return result;
+}
+
+/*
+ *Checks if a set of three points create a right triangle centered around Point first
+ */
+int checkPoints(struct Point first, struct Point second, struct Point third) {
+
+    if ( (first.x == second.x && first.y == second.y) || ( first.x == third.x && first.y == third.y) ) {
+        return 0;
+    }
+
+    int  ans = 0;
+
+    int  vertOne = 0, vertTwo = 0;
+
+    int  rise, run; 
+    double  slopeOne, slopeTwo;
+
+    rise = second.y - first.y;
+    run = second.x - first.x;
+
+    if( run == 0 ) {
+        vertOne = 1;
+    } else if (rise == 0 ) {
+        slopeOne = 0;
+    } else {
+        slopeOne = (double)rise/(double)run;
+    }
+
+    //fprintf(stdout, "slopeOne: %.9f\n", slopeOne);
+    
+    rise = third.y - first.y;
+    run = third.x - first.x;
+
+    if( run == 0 ) {
+       vertTwo = 1;
+    } else if ( rise == 0 ) {
+       slopeTwo = 0;
+    }  else {
+       slopeTwo = (double)rise/(double)run;
+    }
+
+    //fprintf(stdout, "slopeTwo: %.9f\n", fabs(slopeTwo));
+
+    if ( vertOne == 1 && (fabs(slopeTwo) < 0.0000001) ) {
+        //fprintf(stdout, "Fourth\n");
+        ans = 1;
+    } else if ( vertTwo == 1 && (fabs(slopeOne < 0.0000001) ) ) {
+        //fprintf(stdout, "Fifth\n");
+        ans = 1;
+    } else if ( vertOne == 1 || vertTwo == 1 || (fabs(slopeOne < 0.0000001)) || (fabs(slopeTwo < 0.0000001)) ){
+        ans = 0;
+    } else {
+        
+        if ( slopeOne < 0 && slopeTwo < 0 ) {
+            return 0;
+        } else if ( slopeOne > 0 && slopeTwo > 0 ) {
+            return 0;
+        } 
+        
+        slopeTwo *= -1;
+        slopeTwo /= 1;
+
+        if ( fabs(slopeOne - slopeTwo) < 0.0000001 ) {
+            ans = 1;
+        }
+    }
+
+    return ans;
+}
