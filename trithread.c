@@ -10,11 +10,16 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <math.h>
+#include <pthread.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 struct Point {
     int x;
     int y;
 };
+
+void *childFunction( void * );
 
 int checkTriangle(struct Point, struct Point, struct Point );
 
@@ -30,8 +35,6 @@ int main( int argc, char* argv[] ) {
     int numProc;
     int x, y;
 
-    //Pipe
-    int fd[2];
 
     //Check if the files exists
     input = fopen(argv[1], "r");
@@ -73,19 +76,15 @@ int main( int argc, char* argv[] ) {
 
     fclose(input);
 
-    //Create Pipe
-    
-    pipe(fd);
-    pid_t pid;
-   
-    int slice, remainder;
-    slice = numberPoints/numProc;
-    remainder = numberPoints % numProc;
-
-    int start = 0;
-    int end = 0;
-
     //Fork and thread
+
+    int shmid;
+    key_t key = 4337;
+    char *shm, *s;
+
+    if ( (shmid = shmget(
+    
+    pthread_t tid[numProc];
     
     for( int i = 0; i < numProc; i++ ) {
         start = end;
@@ -95,48 +94,45 @@ int main( int argc, char* argv[] ) {
             end++;
         }
 
-        pid = fork();
+        void *param = malloc(sizeof(int) * 2);
 
-        if ( pid == 0 ) {
-           break;
-        }
+        ((int *)param)[0] = start;
+
+        ((int *)param)[1] = end;
+
+        pthread_create(&tid[0], NULL, childFunction, param);
     }
 
-    int numberRight = 0;
-    int temp, counter = 0;
-
-    if ( pid == 0 ) {
-        close(fd[0]);
-        
-        //fprintf(stdout, "%d %d\n", start, end);
-        
-        for ( int i = start; i < end; i++ ) {
-            for ( int j = i + 1; j < numberPoints - 1; j++ ) {
-                for ( int k = j + 1; k < numberPoints; k++ ) {
-                    numberRight += checkTriangle(points[i], points[j], points[k]);
-                }
-            }
-        }
-
-        write(fd[1], &numberRight, sizeof(int) );
-        close(fd[1]);
-        
-        exit(0);
-    } else {
-        close(fd[1]);
-        for ( int i = 0; i < numProc; i++) {
-            read(fd[0], &temp, sizeof(int) );
-            counter += temp;
-        }
-        close(fd[0]);
-
-    }
-
+    int counter = 0;
 
     fprintf(stdout, "%d\n", counter);
 
-    //Figure out how to solve the question.
     return 0;
+}
+
+void *childFunction( void * void_ptr ) {
+
+    int *int_ptr = (int *) void_ptr;
+
+    int start = int_ptr[0]
+    int end = int_ptr[1];
+    int numberRight = 0;
+    
+    key_t key = 4337;
+    size_t size = sizeofk
+
+
+    for ( int i = start; i < end; i++ ) {
+        for ( int j = i + 1; j < numberPoints - 1; j++ ) {
+            for ( int k = j + 1; k < numberPoints; k++ ) {
+                numberRight += checkTriangle(points[i], points[j], points[k]);
+            }
+        }
+    }
+
+    free(void_ptr);
+
+    return NULL;
 }
 
 /*
