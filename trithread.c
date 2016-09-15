@@ -1,7 +1,6 @@
 /**
  * Santiago Andaluz Ruiz 
- * Program 0
- * Pythagorian theorum might be a better option?
+ * Program 1 Trithreads
  */
 
 #include <stdio.h>
@@ -13,6 +12,9 @@
 #include <pthread.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+
+struct Point *points;
+int numberPoints;
 
 struct Point {
     int x;
@@ -55,11 +57,10 @@ int main( int argc, char* argv[] ) {
     }
 
     //Read in the points
-    int numberPoints;
     
     fscanf(input, "%d", &numberPoints);
 
-    struct Point points[numberPoints];
+    points = malloc(sizeof(struct Point) * numberPoints);
 
     int returnValue;
 
@@ -79,33 +80,68 @@ int main( int argc, char* argv[] ) {
     //Fork and thread
 
     int shmid;
-    key_t key = 4337;
-    char *shm, *s;
+    key_t key = 7421;
+    int* shm;
+    size_t shmSize = numberPoints * sizeof(int);
+    
+    //shmid = shmget(key, shmSize ,IPC_CREAT | IPC_EXCL | 0660  );
+    shmid = shmget(key, shmSize , IPC_CREAT | 0660 );
 
-    if ( (shmid = shmget(
-    
+    if ( shmid == -1 ) {
+        perror("Could not allocate memory");
+        exit(-1);
+    }
+
+
+    if ( (shm = (int *) shmat(shmid, NULL, 0)) == (int *) -1 ) {
+        perror("Could not attach memory\n");
+        exit(-1);
+    }
+
+    //Getting the shared memory ready
+    for ( int i = 0; i < numberPoints; i++ ) {
+        shm[i] = -1;
+    }
+
     pthread_t tid[numProc];
+
+    int firstPoint, secondPoint = 0;
+    int slice = numberPoints / numProc;
+    int remainder = numberPoints % numProc;
     
+    //Spawning threads
     for( int i = 0; i < numProc; i++ ) {
-        start = end;
-        end += slice;
+        firstPoint = secondPoint;
+        secondPoint += slice;
         if ( remainder > 0 ) {
             remainder--;
-            end++;
+            secondPoint++;
         }
 
         void *param = malloc(sizeof(int) * 2);
 
-        ((int *)param)[0] = start;
+        ((int *)param)[0] = firstPoint;
 
-        ((int *)param)[1] = end;
+        ((int *)param)[1] = secondPoint;
 
         pthread_create(&tid[0], NULL, childFunction, param);
     }
 
     int counter = 0;
 
+    //Waiting for answers
+    for( int i = 0; i < numberPoints; i++ ) {
+        while ( shm[i] == -1 );
+        counter += shm[i];
+    }
+
+
     fprintf(stdout, "%d\n", counter);
+
+    //Clean up
+    shmdt(shm);
+    shmctl(shmid, IPC_RMID, NULL);
+    free(points);
 
     return 0;
 }
@@ -114,13 +150,30 @@ void *childFunction( void * void_ptr ) {
 
     int *int_ptr = (int *) void_ptr;
 
-    int start = int_ptr[0]
+    int start = int_ptr[0];
     int end = int_ptr[1];
+
+    /*
+    fprintf(stdout, "%d %d\n", start, end);
+    fprintf(stdout, "%d %d\n", points[start].x,  points[start].y);
+    */
+
     int numberRight = 0;
     
-    key_t key = 4337;
-    size_t size = sizeofk
+    key_t key = 7421;
+    size_t size = numberPoints * sizeof(int);
+    int shmid = shmget(key, size , 0660 );
+    if ( shmid == -1 ) {
+        perror("Could not located shared memory");
+        exit(-1);
+    }
 
+    int *answers = (int *) shmat(shmid, NULL, 0);
+
+    if ( answers == (int *)-1) {
+        perror("Could not attach memory child");
+        exit(-1);
+    }
 
     for ( int i = start; i < end; i++ ) {
         for ( int j = i + 1; j < numberPoints - 1; j++ ) {
@@ -128,7 +181,11 @@ void *childFunction( void * void_ptr ) {
                 numberRight += checkTriangle(points[i], points[j], points[k]);
             }
         }
+        answers[i] = numberRight;
+        numberRight = 0;
     }
+
+    shmdt(answers);
 
     free(void_ptr);
 
