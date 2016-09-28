@@ -1,52 +1,60 @@
 #include <iostream>
-//#include "buffet.h"
-//#include "pthread.h"
+#include "buffet.h"
+#include "pthread.h"
 #include <iterator>
 #include <vector>
 
 using namespace std;
 
-/*
 void *serverFunction( void * );
 
 void *patronFunction( void * );
-*/
 
 int main() {
-    //Buffet buf(10);
-    vector<int> food(0);
-    vector<int> sliceIndex(0);
-
-    for ( int i = 0; i < 10; i++ ) {
-        food.push_back(i);
-    }
-
-    sliceIndex.push_back(8);
-
-    cout << "BREAK\n";
-    cout << food.size();
-    for ( int var : food ) {
-        cout << var << " ";
-    }
-
-    int offset = food.size() - 1;
-    int index;
-    vector<int>::iterator it;
-
-    while ( !sliceIndex.empty() ) {
-        index = sliceIndex.back();
-
-        sliceIndex.pop_back();
-
-        it -= ( offset - index );
-
-        offset = index;
-        food.erase(it);
-    }
-
-    for ( int var : food ) {
-        cout << var << " ";
-    }
+    Buffet *buf = new Buffet();
+    buf->AddPizza(5, Cheese);
+    buf->close();
+    delete buf;
 
     return 0;
 }
+
+
+void *serverFunction( void * param ) {
+    SliceType pizza[] = {Meat, Veggie, Works, Cheese};
+    int type,
+        count,
+        max = (*(int *)param);
+    Buffet *buff = ((Buffet *)param) + 4;
+    while( true ) {
+        type = random();
+        count = max;
+        //rand the type
+        //rand the number 1 - 2*size
+        //add pizza to buff
+        if ( !(buff->AddPizza( count, pizza[type] )) ) {
+            break;
+        }
+    }
+
+    return nullptr;
+}
+
+void *patronFunction( void * param ) {
+    int type,
+        count,
+        max = (*(int *)param);
+    Buffet *buff = ((Buffet *)param) + 4;
+    while ( true ) {
+        type = random();
+        count = max;
+        //random veg or meat
+        //random number of slices 1 - size/3 
+        if ( type == 0 ) {
+            buff->TakeAny(count);
+        }
+    }
+
+    return nullptr;
+}
+

@@ -2,6 +2,7 @@
 #define BUFFET_H
 
 #include <vector>
+#include "semaphore.h"
 using namespace std;
 
 /**
@@ -20,6 +21,14 @@ enum SliceType {
  */
 class Buffet
 {
+  private:
+      int maxSlices;
+      vector<SliceType> food;
+      bool bufOpen;
+      int vegWait;
+      sem_t buf;
+      sem_t vegCounter;
+	  
   public:
     /**
      * Construct buffet for maximum given pizza slides
