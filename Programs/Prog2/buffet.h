@@ -20,10 +20,6 @@ enum SliceType {
  */
 class Buffet
 {
-  private:
-      int maxSlices;
-      vector<SliceType> food;
-
   public:
     /**
      * Construct buffet for maximum given pizza slides
