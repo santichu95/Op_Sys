@@ -12,10 +12,14 @@ void *patronFunction( void * );
 
 int main() {
     Buffet *buf = new Buffet();
-    buf->AddPizza(5, Cheese);
-    buf->close();
+	pthread_t meat;
+	pthread_t veg;
+	pthread_t server;
+	pthread_create(&meat, NULL, NULL, NULL);
+	pthread_create(&server, NULL, NULL, NULL);
+	pthread_create(&veg, NULL, NULL, NULL);
+	buf->close();
     delete buf;
-
     return 0;
 }
 
@@ -25,7 +29,7 @@ void *serverFunction( void * param ) {
     int type,
         count,
         max = (*(int *)param);
-    Buffet *buff = ((Buffet *)param) + 4;
+    //Buffet *buff = ((Buffet *)param) + 4;
     while( true ) {
         type = random();
         count = max;

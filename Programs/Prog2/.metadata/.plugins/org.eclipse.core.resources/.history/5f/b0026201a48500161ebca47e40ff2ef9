@@ -1,0 +1,65 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Semaphore;
+
+public class BuffetSemaphore implements Buffet {
+	private int maxSlices;
+	private List<SliceType> food;
+	private boolean bufOpen;
+	private int vegWait;
+	private final Semaphore buf;
+	private final Semaphore vegCounter;
+	  
+	public BuffetSemaphore(final int maxSlice) {
+	    bufOpen = true;
+	    vegWait = 0;
+	    maxSlices = maxSlice;
+	    food = new ArrayList<SliceType>();
+	    buf = new Semaphore(1, true);
+	    vegCounter = new Semaphore(1, true);
+	}
+	
+	@Override
+	public List<SliceType> TakeAny(int desired) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<SliceType> TakeVeg(int desired) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean AddPizza(int count, SliceType stype) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void close() {//No more slices can be added
+	    maxSlices = 0;
+	    bufOpen = false;
+	    
+	    //Waits on buff
+	    buf.aquire();
+	    
+	    //Clears food, holding the pizza
+	    food.clear();
+
+	    //posts buf
+	    sem_post(&buf);
+
+	    //keeps track of the value of buf
+	    int counter = INT_MAX;
+
+	    //While someone is using the semaphore busy wait
+	    //Any remaining threads should enter CS and immediately get kicked out
+	    //due to the maxSlice being 0 and the vector being empty.
+	    while ( counter != 1 ) {
+	        sem_getvalue(&buf, &counter);
+	    }
+	}
+
+}

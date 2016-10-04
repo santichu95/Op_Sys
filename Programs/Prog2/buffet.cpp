@@ -238,7 +238,7 @@ bool Buffet::AddPizza(const int count, const SliceType stype) {
         //Add pizza to vector
 
         //Checks to see if there is room for the pizza
-        while ( food.size() < (unsigned int)maxSlices ) {
+        while ( food.size() < (unsigned int)maxSlices && added < count) {
 
             //Checks if the buffet is open 
             if ( !bufOpen ) {
@@ -247,6 +247,7 @@ bool Buffet::AddPizza(const int count, const SliceType stype) {
             } else { 
                 //Adds the slice to the buff
                 food.push_back(stype);
+				added++;
             }
         }
 

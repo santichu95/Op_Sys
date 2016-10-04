@@ -1,0 +1,45 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Semaphore;
+
+public class BuffetSemaphore implements Buffet {
+	private int maxSlices;
+	private List<SliceType> food;
+	private boolean bufOpen;
+	private int vegWait;
+	private final Semaphore buf = new Semaphore(1, true);
+	private final Semaphore vegCounter = new Semaphore(1, true);
+	  
+	public BuffetSemaphore(final int maxSlice) {
+	    bufOpen = true;
+	    vegWait = 0;
+	    maxSlices = maxSlice;
+	    food = new ArrayList<SliceType>();
+	    sem_init(&buf, 0, 1);
+	    sem_init(&vegCounter, 0, 1);
+	}
+	@Override
+	public List<SliceType> TakeAny(int desired) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<SliceType> TakeVeg(int desired) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean AddPizza(int count, SliceType stype) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void close() {
+		// TODO Auto-generated method stub
+
+	}
+
+}
